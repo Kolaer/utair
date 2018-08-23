@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+ {% if messages %}
+  <ul class="flashes">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+  </ul>
+ {% endif %}
+{% endwith %}
+<nav>
+    <h1><a href="{{ url_for('index') }}">Index</a></h1>
+</nav>
+<form method="post">
+    <input type="email" name="email" placeholder="e-mail">
+    <input type="submit" value="Send token">
+</form>
+<hr/>
+<form method="post" action="{{ url_for('auth.save_token') }}">
+    <input placeholder="token" name="token">
+    <input type="submit" value="Log in by token">
+</form>
+</body>
+</html>
