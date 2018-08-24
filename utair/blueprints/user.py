@@ -1,4 +1,5 @@
 import functools
+from decimal import Decimal
 
 from flask import Blueprint, request, jsonify, g
 from mongoengine import DoesNotExist, MultipleObjectsReturned
@@ -78,6 +79,25 @@ def user_info():
     })
 
 
+def add_param(params, arg, key=None, type=None, converter=None):
+    """Adds parameter to params map.
+    Supports: custom key
+              custom type
+              converting param before assignment"""
+    if key is None:
+        key = arg
+    if type is None:
+        type = str
+
+    param = request.args.get(arg, type=type)
+
+    if param is not None:
+        if converter is None:
+            params[key] = param
+        else:
+            params[key] = converter(param)
+
+
 @bp.route('/transactions', methods=['GET'])
 @load_user_by_token
 @token_required
@@ -99,42 +119,25 @@ def user_transactions():
 
     params = {'card_id': card_id}
 
-    from_place = request.args.get('from')
+    add_param(params, 'from', 'from_place')
 
-    if from_place is not None:
-        params['from_place'] = from_place
+    add_param(params, 'to', 'to_place')
 
-    to_place = request.args.get('to')
-
-    if to_place is not None:
-        params['to_place'] = to_place
-
+    # must treat this differently, because its list (always not None)
     transaction_ids = request.args.getlist('id', type=int)
 
     if len(transaction_ids) > 0:
         params['transaction_id__in'] = transaction_ids
 
-    before = request.args.get('before')
+    add_param(params, 'before', 'date__lte', converter=dateutil.parser.parse)
 
-    if before is not None:
-        params['date__lte'] = dateutil.parser.parse(before)
-
-    after = request.args.get('after')
-
-    if after is not None:
-        params['date__gte'] = dateutil.parser.parse(after)
+    add_param(params, 'after', 'date__gte', converter=dateutil.parser.parse)
 
     # bonus more than
-    more = request.args.get('more', type=float)
-
-    if more is not None:
-        params['bonus__gte'] = more
+    add_param(params, 'more', 'bonus__gte', type=Decimal)
 
     # bonus less than
-    less = request.args.get('less', type=float)
-
-    if less is not None:
-        params['bonus__lte'] = less
+    add_param(params, 'less', 'bonus__lte', type=Decimal)
 
     transactions = Transaction.objects(**params).paginate(page=page, per_page=PAGE_SIZE)
 
