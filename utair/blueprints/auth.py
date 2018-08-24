@@ -48,7 +48,7 @@ def load_logged_in_user(view):
 # Better option would be to add to message queue
 def send_token(email, token):
     from utair import app
-    if app.config['ENV'] == 'development':
+    if app.env == 'development':
         print('{}: {}'.format(email, token))
     else:
         # Probably store smtp client to reuse it

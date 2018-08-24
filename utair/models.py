@@ -16,11 +16,7 @@ class User(db.Document):
         'indexes': [
             'email',
             'card_id',
-            {
-                'fields': ['token'],
-                # 30 min token
-                'expireAfterSeconds': 60 * 30
-            }
+            'token'
         ]
     }
 
@@ -28,7 +24,7 @@ class User(db.Document):
 class Transaction(db.Document):
     transaction_id = db.IntField(required=True, unique=True)
     # maybe replace with reference to user?
-    card_id = db.LongField(min_value=0, required=True, unique=True)
+    card_id = db.LongField(min_value=0, required=True)
 
     # floats/doubles have precision errors
     bonus = db.DecimalField(min_value=0, precision=2, required=True)
@@ -48,14 +44,10 @@ class Transaction(db.Document):
 
 
 class ApiUser(db.Document):
-    login = db.StringField(required=True, unique=True)
-    # password hash
-    password = db.StringField(required=True)
     token = db.StringField(required=True, unique=True)
 
     meta = {
         'indexes': [
-            'login',
             'token'
         ]
     }
