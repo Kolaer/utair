@@ -5,6 +5,7 @@ import dateutil
 from flask import Blueprint, request, jsonify
 
 from utair.models import Transaction, ApiUser
+from utair.utils import json_error
 
 bp = Blueprint('transaction', __name__, url_prefix='/transaction')
 
@@ -22,16 +23,10 @@ def api_user_required(view):
             token = request.args.get('token')
 
         if token is None:
-            return jsonify({
-                'status': 'error',
-                'message': 'You must specify api user token'
-            })
+            return json_error('You must specify api user token')
 
         if ApiUser.objects(token=token).limit(1).count() != 1:
-            return jsonify({
-                'status': 'error',
-                'message': 'Api user not found'
-            })
+            return json_error('Api user not found')
 
         return view(**kwargs)
 
@@ -46,10 +41,7 @@ def add_transaction():
 
     if Transaction.objects(transaction_id=transaction_id).limit(1).count() != 0:
         # transaction already exists
-        return jsonify({
-            'status': 'error',
-            'message': 'Transaction with that id already exist'
-        })
+        return json_error('Transaction with that id already exist')
 
     bonus = Decimal(request.form['bonus'])
 

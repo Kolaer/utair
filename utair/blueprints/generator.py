@@ -1,8 +1,8 @@
 import random
 
-from flask import Blueprint, jsonify
+from flask import Blueprint
 
-from utair import db
+from utair import db, app
 from utair.models import User, ApiUser
 from utair.utils import json_ok
 
@@ -57,7 +57,7 @@ def generate_api_user_web():
 @bp.route('/generate')
 def generate():
     """Clears current database and generates new database."""
-    db.connection.drop_database('utair')
+    db.connection.drop_database(app.config['MONGODB_DB'])
 
     for _ in range(100):
         generate_user()

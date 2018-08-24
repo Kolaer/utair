@@ -4,11 +4,7 @@ from flask_mongoengine import MongoEngine
 app = Flask(__name__)
 app.secret_key = "default string, if not set in config"
 
-app.config['MONGODB_SETTINGS'] = {
-    'db': 'utair'
-}
-
-app.config.from_pyfile('config.py', silent=True)
+app.config.from_object('config')
 
 db = MongoEngine(app)
 
