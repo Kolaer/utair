@@ -20,6 +20,11 @@ app.register_blueprint(auth.bp)
 app.register_blueprint(user.bp)
 app.register_blueprint(transaction.bp)
 
+# user and transactions generators
+if app.env == 'development':
+    from utair.blueprints import generator
+    app.register_blueprint(generator.bp)
+
 app.add_url_rule('/', endpoint='index')
 
 

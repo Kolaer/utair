@@ -7,6 +7,8 @@ from utair.models import User, Transaction
 
 import dateutil
 
+from utair.utils import json_ok, json_error
+
 bp = Blueprint('user', __name__, url_prefix='/user')
 
 PAGE_SIZE = 10
@@ -17,14 +19,16 @@ def token_required(view):
 
     @functools.wraps(view)
     def wrapped(**kwargs):
+        token = None
+
         if request.method == 'GET':
             token = request.args.get('token')
+        elif request.method == 'POST':
+            if 'token' in request.form:
+                token = request.form['token']
 
-            if token is None:
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Token not found in request'
-                })
+        if token is None:
+            return json_error('Token not found in request')
 
         return view(**kwargs)
 
@@ -42,10 +46,7 @@ def load_user_by_token(view):
         try:
             user = User.objects(token=token).get()
         except DoesNotExist:
-            return jsonify({
-                'status': 'error',
-                'message': 'User not found'
-            })
+            return json_error('User not found')
         except MultipleObjectsReturned as e:
             # Shouldn't be possible, because token is unique
             raise e
@@ -65,8 +66,7 @@ def user_info():
 
     total_bonus = Transaction.objects(card_id=user.card_id).sum('bonus')
 
-    return jsonify({
-        'status': 'ok',
+    return json_ok({
         'user': {
             'first_name': user.first_name,
             'last_name': user.last_name,
@@ -82,6 +82,15 @@ def user_info():
 @load_user_by_token
 @token_required
 def user_transactions():
+    """Lets user see his transactions, supports:
+    pagination (page param)
+    filtering: from (place)
+               to (place)
+               before (date)
+               after (date)
+               transaction_ids
+               less (bonus)
+               more (bonus)"""
     card_id = g.user.card_id
 
     page = request.args.get('page', default=1, type=int)
@@ -142,7 +151,4 @@ def user_transactions():
             'date': transaction.date
         })
 
-    return jsonify({
-        'status': 'ok',
-        'transactions': trans_json
-    })
+    return json_ok({'transactions': trans_json})

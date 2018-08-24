@@ -10,19 +10,24 @@ class User(db.Document):
 
     card_id = db.LongField(min_value=0, required=True, unique=True)
 
-    token = db.StringField(unique=True)
+    token = db.StringField()
 
     meta = {
         'indexes': [
             'email',
             'card_id',
-            'token'
+            {
+                'fields': ['token'],
+                'unique': True,
+                'sparse': True
+             }
         ]
     }
 
 
 class Transaction(db.Document):
-    transaction_id = db.IntField(required=True, unique=True)
+    # probable use _id? ; but maybe it's coming from external source?
+    transaction_id = db.LongField(min_value=0, required=True, unique=True)
     # maybe replace with reference to user?
     card_id = db.LongField(min_value=0, required=True)
 
